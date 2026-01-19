@@ -1,0 +1,15 @@
+{
+  "name": "update_project_docs",
+  "description": "Updates project documentation by generating structure.json and installing documentation prompts for the current working directory (Codex target)",
+  "command": "python3 run.py",
+  "args": [
+    {
+      "name": "lang",
+      "description": "Documentation language (en or es)",
+      "required": false
+    }
+  ],
+  "output": {
+    "type": "text"
+  }
+}
