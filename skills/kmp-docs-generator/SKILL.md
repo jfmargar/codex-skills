@@ -10,6 +10,7 @@ Codex CLI skill that generates project documentation by overwriting:
 - docs/architecture.md (from assets/architecture.md)
 - docs/navigation.md (summary built from docs/flows.md + project scan)
 - docs/overview.md (project analysis)
+- AGENTS.md (from assets/AGENTS.md)
 
 The skill reads the current working directory as the target project.
 
@@ -32,6 +33,7 @@ Example:
 
 ## Expected output
 
+    AGENTS.md
     docs/
      ├── architecture.md
      ├── navigation.md
@@ -39,5 +41,5 @@ Example:
 
 ## Notes
 
-- This skill overwrites the three docs files every run.
+- This skill overwrites AGENTS.md and the three docs files every run.
 - If docs/flows.md is missing, navigation.md includes a placeholder note.

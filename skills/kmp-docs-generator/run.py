@@ -303,12 +303,18 @@ def main() -> int:
 
     skill_root = Path(__file__).parent.resolve()
     architecture_source = skill_root / "assets" / "architecture.md"
+    agents_source = skill_root / "assets" / "AGENTS.md"
     if not architecture_source.exists():
         print("Error: assets/architecture.md not found in skill folder")
+        return 1
+    if not agents_source.exists():
+        print("Error: assets/AGENTS.md not found in skill folder")
         return 1
 
     architecture_target = docs_dir / "architecture.md"
     architecture_target.write_text(read_text(architecture_source), encoding="utf-8")
+    agents_target = project_root / "AGENTS.md"
+    agents_target.write_text(read_text(agents_source), encoding="utf-8")
 
     kotlin_files = [Path(path) for path in iter_kotlin_files(str(project_root))]
     structure = collect_structure(str(project_root))
@@ -347,6 +353,7 @@ def main() -> int:
     print("Documentation generation completed successfully.")
     print(f"Project (cwd): {project_root}")
     print("Generated / overwritten:")
+    print(" - AGENTS.md")
     print(" - docs/architecture.md")
     print(" - docs/navigation.md")
     print(" - docs/overview.md")
