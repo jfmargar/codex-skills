@@ -1,6 +1,6 @@
 {
   "name": "kmp-docs-generator",
-  "description": "Generate and overwrite AGENTS.md, docs/architecture.md, docs/navigation.md, and docs/overview.md for Kotlin Multiplatform Compose projects using fixed templates, docs/flows.md, and project analysis",
+  "description": "Analyze Kotlin Multiplatform Compose repositories and generate AGENTS.md, docs/architecture.md, docs/navigation.md, and docs/overview.md using repo analysis; templates are optional examples, not literal content",
   "command": "python3 run.py",
   "args": [],
   "output": {

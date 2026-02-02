@@ -1,34 +1,27 @@
-# Arquitectura limpia y capas
+# Arquitectura
 
-Este repositorio aplica Clean Architecture en un proyecto Kotlin Multiplatform (KMP).
+## Modulos
 
-## Capas y dependencias
-- **Domain (shared)**: lógica de negocio y modelos puros. Los casos de uso pueden depender de repositorios y coroutines; evita dependencias de UI o plataforma.
-- **Data (shared)**: implementaciones de repositorios, mappers y acceso a datos. Depende de Domain.
-- **UI (shared)**: Compose Multiplatform. Solo depende de ViewModels, no contiene lógica de negocio.
-- **Plataforma**: `androidMain` y `iosMain` contienen integraciones específicas (Activity, ViewController, permisos, etc.).
+{{modules}}
 
-## Reglas globales
-- Domain no depende de UI ni plataformas específicas.
-- UI depende solo de ViewModels.
-- No hay lógica de negocio en UI.
-- No exponer estado mutable públicamente.
-- Preferir composición sobre herencia.
-- KMP: el módulo compartido es dueño del dominio y los contratos de datos.
+## Puntos de entrada
 
-## Ubicación sugerida
-- Domain: `composeApp/src/commonMain/kotlin/.../domain`
-- Data: `composeApp/src/commonMain/kotlin/.../data`
-- UI: `composeApp/src/commonMain/kotlin/.../ui`
-- Integraciones de plataforma: `composeApp/src/androidMain` y `composeApp/src/iosMain`
+{{entry_points}}
 
-## Flujos de servicio (responsabilidades por capa)
-- Domain resuelve el estado funcional con `ServiceFlowStateResolverUseCase` a partir de `GET /api/app/services/current`.
-- UI traduce `ServiceFlowState` a sheets y modos de activacion en `MainViewModel` y `MainScreen`.
-- Las fases de activacion se expresan como `ParkingActivationPhase` (`Activation`, `Reopening`, `Finishing`).
+## Codigo compartido
 
-## Cumplimiento arquitectónico
-Si un cambio propuesto viola estas reglas:
-- Explicar por qué es inválido.
-- Proponer una alternativa compatible.
-- No implementar soluciones que rompan la arquitectura.
+{{common_main}}
+
+## Capas y paquetes
+
+{{layers}}
+
+## Componentes clave
+
+{{key_components}}
+
+## Dependencias relevantes
+
+{{dependencies}}
+
+{{architecture_diagram}}
