@@ -1,7 +1,6 @@
 {
   "name": "kmp-docs-generator",
-  "description": "Analyze Kotlin Multiplatform Compose repositories and generate AGENTS.md, docs/architecture.md, docs/navigation.md, and docs/overview.md using repo analysis; templates are optional examples, not literal content",
-  "command": "python3 run.py",
+  "description": "Analyze Kotlin Multiplatform Compose repositories and generate or update README.md plus docs/overview.md, docs/architecture.md, docs/navigation.md, and docs/flows.md from real repo inspection; create missing files and fully refresh existing ones for consistency",
   "args": [],
   "output": {
     "type": "text"

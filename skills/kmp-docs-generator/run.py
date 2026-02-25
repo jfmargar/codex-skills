@@ -2,59 +2,43 @@
 import re
 from pathlib import Path
 from typing import Dict, Iterable, List
-
 from extract_structure import collect_structure, iter_kotlin_files
-
 ANDROID_ACTIVITY_RE = re.compile(r"\bclass\s+(\w*MainActivity)\b")
 IOS_VIEW_CONTROLLER_RE = re.compile(r"\bclass\s+(\w*MainViewController)\b")
 COMPOSE_CONTROLLER_RE = re.compile(r"\bComposeUIViewController\s*\{")
 APP_FUNCTION_RE = re.compile(r"\bfun\s+App\s*\(")
 NAV_GRAPH_RE = re.compile(r"\b(\w+NavGraph)\b")
-UISTATE_RE = re.compile(r"\b(\w+UiState)\b")
+UISTATE_RE = re.compile(r"\b(?:data\s+class|sealed\s+(?:class|interface))\s+(\w*UiState)\b")
 BOTTOM_SHEET_RE = re.compile(r"\b(\w+BottomSheet)\b")
 MODAL_BOTTOM_SHEET_RE = re.compile(r"\bModalBottomSheet\b")
 VIEWMODEL_RE = re.compile(r"\bclass\s+(\w+ViewModel)\b")
 COMPOSABLE_ROUTE_RE = re.compile(r'\bcomposable\s*\(\s*["\']([^"\']+)["\']')
 COMPOSABLE_ROUTE_NAMED_RE = re.compile(r'\bcomposable\s*\(\s*route\s*=\s*["\']([^"\']+)["\']')
-
 CODE_BLOCK_RE = re.compile(r"^```")
 HEADING_RE = re.compile(r"^(#+)\s+(.*)$")
 PLACEHOLDER_RE = re.compile(r"{{\w+}}")
-
 MAX_LIST_ITEMS = 12
-
-
 def read_text(path: Path) -> str:
     try:
         return path.read_text(encoding="utf-8")
     except OSError:
         return ""
-
-
 def rel_path(path: Path, root: Path) -> str:
     try:
         return str(path.relative_to(root))
     except ValueError:
         return str(path)
-
-
 def template_has_placeholders(text: str) -> bool:
     return bool(PLACEHOLDER_RE.search(text))
-
-
 def fill_template(template: str, data: Dict[str, str]) -> str:
     for key, value in data.items():
         template = template.replace("{{" + key + "}}", value)
     return template
-
-
 def load_template_with_fallback(path: Path, fallback: str) -> str:
     template = read_text(path)
     if template.strip() and template_has_placeholders(template):
         return template
     return fallback
-
-
 def find_entry_points(kotlin_files: Iterable[Path], project_root: Path) -> Dict[str, List[str]]:
     entries = {"android": [], "ios": [], "app": []}
     for file_path in kotlin_files:
@@ -72,8 +56,6 @@ def find_entry_points(kotlin_files: Iterable[Path], project_root: Path) -> Dict[
     for key in entries:
         entries[key] = sorted(set(entries[key]))
     return entries
-
-
 def collect_named_symbols(kotlin_files: Iterable[Path], pattern: re.Pattern) -> List[str]:
     symbols = set()
     for file_path in kotlin_files:
@@ -81,8 +63,6 @@ def collect_named_symbols(kotlin_files: Iterable[Path], pattern: re.Pattern) -> 
         for match in pattern.findall(text):
             symbols.add(match)
     return sorted(symbols)
-
-
 def collect_files_with_patterns(
     kotlin_files: Iterable[Path],
     project_root: Path,
@@ -97,15 +77,12 @@ def collect_files_with_patterns(
     for label in results:
         results[label] = sorted(set(results[label]))[:MAX_LIST_ITEMS]
     return results
-
-
 def summarize_flows(text: str, max_items: int = 6) -> List[str]:
     lines = text.splitlines()
     in_code_block = False
     current_heading = None
     current_paragraph: List[str] = []
     summaries = []
-
     def flush():
         nonlocal current_heading, current_paragraph
         if not current_heading or not current_paragraph:
@@ -118,7 +95,6 @@ def summarize_flows(text: str, max_items: int = 6) -> List[str]:
             summaries.append(f"- {current_heading}: {summary}")
         current_heading = None
         current_paragraph = []
-
     for line in lines:
         if CODE_BLOCK_RE.match(line.strip()):
             in_code_block = not in_code_block
@@ -139,8 +115,6 @@ def summarize_flows(text: str, max_items: int = 6) -> List[str]:
     if len(summaries) < max_items:
         flush()
     return summaries[:max_items]
-
-
 def detect_modules(project_root: Path) -> List[str]:
     candidates = ["composeApp", "shared", "androidApp", "iosApp"]
     modules = [name for name in candidates if (project_root / name).is_dir()]
@@ -155,8 +129,6 @@ def detect_modules(project_root: Path) -> List[str]:
                 if name:
                     modules.append(name)
     return sorted(set(modules))
-
-
 def find_common_main(project_root: Path, modules: List[str]) -> List[str]:
     common_paths = []
     for module in modules:
@@ -164,8 +136,6 @@ def find_common_main(project_root: Path, modules: List[str]) -> List[str]:
         if path.is_dir():
             common_paths.append(str(path.relative_to(project_root)))
     return common_paths
-
-
 def find_layer_paths(project_root: Path, common_main_paths: List[str]) -> Dict[str, List[str]]:
     layers = {"domain": [], "data": [], "ui": []}
     for common_path in common_main_paths:
@@ -177,16 +147,16 @@ def find_layer_paths(project_root: Path, common_main_paths: List[str]) -> Dict[s
     for layer in layers:
         layers[layer] = sorted(set(layers[layer]))[:MAX_LIST_ITEMS]
     return layers
-
-
 def extract_gradle_dependencies(text: str) -> List[str]:
     deps = []
-    pattern = re.compile(r"^\s*(implementation|api|kapt|ksp)\s*\(?\s*[\"'](.+?)[\"']\s*\)?", re.MULTILINE)
+    pattern = re.compile(r"^\s*(implementation|api|kapt|ksp)\s*\((.+)\)\s*(?://.*)?$", re.MULTILINE)
     for match in pattern.findall(text):
-        deps.append(match[1])
+        arg = match[1].strip()
+        if (arg.startswith('"') and arg.endswith('"')) or (arg.startswith("'") and arg.endswith("'")):
+            deps.append(arg[1:-1])
+        else:
+            deps.append(arg)
     return deps
-
-
 def classify_dependencies(deps: List[str]) -> Dict[str, List[str]]:
     buckets = {
         "di": [],
@@ -223,8 +193,6 @@ def classify_dependencies(deps: List[str]) -> Dict[str, List[str]]:
         else:
             buckets["other"].append(dep)
     return buckets
-
-
 def collect_compose_routes(kotlin_files: Iterable[Path]) -> List[str]:
     routes = set()
     for file_path in kotlin_files:
@@ -234,8 +202,6 @@ def collect_compose_routes(kotlin_files: Iterable[Path]) -> List[str]:
         for match in COMPOSABLE_ROUTE_NAMED_RE.findall(text):
             routes.add(match)
     return sorted(routes)
-
-
 def build_navigation_doc(
     project_root: Path,
     structure: Dict[str, List[dict]],
@@ -249,7 +215,6 @@ def build_navigation_doc(
     if any(MODAL_BOTTOM_SHEET_RE.search(read_text(path)) for path in kotlin_files):
         sheets.append("ModalBottomSheet")
         sheets = sorted(set(sheets))
-
     files_with = collect_files_with_patterns(
         kotlin_files,
         project_root,
@@ -259,7 +224,6 @@ def build_navigation_doc(
             "BottomSheet": BOTTOM_SHEET_RE,
         },
     )
-
     lines = [
         "# Navegacion y pantallas",
         "",
@@ -269,7 +233,6 @@ def build_navigation_doc(
         "",
         "## Puntos de entrada",
     ]
-
     if entry_points["android"]:
         lines.append("- Android: " + ", ".join(entry_points["android"]))
     if entry_points["ios"]:
@@ -278,7 +241,6 @@ def build_navigation_doc(
         lines.append("- App root: " + ", ".join(entry_points["app"]))
     if not any(entry_points.values()):
         lines.append("- No se detectaron puntos de entrada.")
-
     lines += ["", "## Resumen de flows.md"]
     if flows_exists and flows_summary:
         lines.extend(flows_summary)
@@ -286,39 +248,32 @@ def build_navigation_doc(
         lines.append("- Ver docs/flows.md para el resumen completo.")
     else:
         lines.append("- docs/flows.md no existe en el proyecto.")
-
     lines += ["", "## Estructura detectada"]
     if structure.get("screens"):
         lines.append("- Pantallas: " + ", ".join(structure["screens"][:MAX_LIST_ITEMS]))
     else:
         lines.append("- Pantallas: no detectadas.")
-
     if structure.get("uiStates"):
         lines.append("- UiStates: " + ", ".join(structure["uiStates"][:MAX_LIST_ITEMS]))
     else:
         lines.append("- UiStates: no detectados.")
-
     nav_graphs = [name for name in structure.get("screens", []) if name.endswith("NavGraph")]
     if nav_graphs:
         lines.append("- NavGraphs: " + ", ".join(nav_graphs[:MAX_LIST_ITEMS]))
     else:
         lines.append("- NavGraphs: no detectados.")
-
     if sheets:
         lines.append("- BottomSheets: " + ", ".join(sheets[:MAX_LIST_ITEMS]))
     else:
         lines.append("- BottomSheets: no detectados.")
-
     if routes:
         lines.append("- Rutas composable: " + ", ".join(routes[:MAX_LIST_ITEMS]))
     else:
         lines.append("- Rutas composable: no detectadas.")
-
     if structure.get("navigation"):
         lines += ["", "## Navegacion inferida (sheets)"]
         for item in structure["navigation"][:MAX_LIST_ITEMS]:
             lines.append(f"- {item['from']} -> {item['to']} ({item['event']})")
-
     lines += ["", "## Archivos relevantes"]
     any_files = False
     for label, paths in files_with.items():
@@ -327,10 +282,7 @@ def build_navigation_doc(
             lines.append(f"- {label}: " + ", ".join(paths))
     if not any_files:
         lines.append("- No se detectaron archivos relevantes.")
-
     return "\n".join(lines).rstrip() + "\n"
-
-
 def build_overview_doc(
     project_root: Path,
     structure: Dict[str, List[dict]],
@@ -351,26 +303,22 @@ def build_overview_doc(
         lines.append("- Flujos resumidos: [docs/flows.md](flows.md)")
     else:
         lines.append("- Flujos resumidos: docs/flows.md no existe")
-
     lines += ["", "## Arranque y estructura base"]
     if modules:
         lines.append("- Modulos detectados: " + ", ".join(modules))
     else:
         lines.append("- Modulos detectados: no se detectaron.")
-
     if entry_points["android"]:
         lines.append("- Android entry: " + ", ".join(entry_points["android"]))
     if entry_points["ios"]:
         lines.append("- iOS entry: " + ", ".join(entry_points["ios"]))
     if entry_points["app"]:
         lines.append("- UI raiz: " + ", ".join(entry_points["app"]))
-
     lines += ["", "## Codigo compartido"]
     if common_main_paths:
         lines.append("- commonMain: " + ", ".join(common_main_paths))
     else:
         lines.append("- commonMain: no detectado.")
-
     lines += ["", "## Arquitectura (resumen)"]
     layer_lines = []
     for layer, paths in layer_paths.items():
@@ -381,16 +329,114 @@ def build_overview_doc(
             lines.append(f"- {item}")
     else:
         lines.append("- Capas no detectadas en commonMain.")
-
     lines += ["", "## Navegacion y flujos"]
     screen_count = len(structure.get("screens", []))
     ui_state_count = len(structure.get("uiStates", []))
     lines.append(f"- Pantallas detectadas: {screen_count}")
     lines.append(f"- UiStates detectados: {ui_state_count}")
-
     return "\n".join(lines).rstrip() + "\n"
-
-
+def build_flows_doc(
+    project_root: Path,
+    structure: Dict[str, List[dict]],
+    entry_points: Dict[str, List[str]],
+    modules: List[str],
+    common_main_paths: List[str],
+    layer_paths: Dict[str, List[str]],
+    kotlin_files: List[Path],
+) -> str:
+    nav_graphs = sorted({name for name in structure.get("screens", []) if name.endswith("NavGraph")})
+    screens = structure.get("screens", [])
+    ui_states = structure.get("uiStates", [])
+    sheets = collect_named_symbols(kotlin_files, BOTTOM_SHEET_RE)
+    if any(MODAL_BOTTOM_SHEET_RE.search(read_text(path)) for path in kotlin_files):
+        sheets.append("ModalBottomSheet")
+        sheets = sorted(set(sheets))
+    lines = [
+        "# Flujos de navegacion",
+        "",
+        "Referencias relacionadas:",
+        "- Overview: [docs/overview.md](overview.md)",
+        "- Navegacion y pantallas: [docs/navigation.md](navigation.md)",
+        "",
+        "## Resumen",
+        f"- Modulos: {', '.join(modules) if modules else 'no detectados'}",
+        f"- commonMain: {', '.join(common_main_paths) if common_main_paths else 'no detectado'}",
+        f"- Pantallas detectadas: {len(screens)}",
+        f"- UiStates detectados: {len(ui_states)}",
+    ]
+    if entry_points.get("android"):
+        lines.append("- Entry Android: " + ", ".join(entry_points["android"]))
+    if entry_points.get("ios"):
+        lines.append("- Entry iOS: " + ", ".join(entry_points["ios"]))
+    if entry_points.get("app"):
+        lines.append("- Entry UI: " + ", ".join(entry_points["app"]))
+    lines += ["", "## NavGraphs"]
+    if nav_graphs:
+        for nav in nav_graphs[:MAX_LIST_ITEMS]:
+            lines.append(f"- {nav}")
+    else:
+        lines.append("- No se detectaron NavGraphs.")
+    lines += ["", "## Pantallas principales"]
+    if screens:
+        lines.append("- " + ", ".join(screens[:MAX_LIST_ITEMS]))
+    else:
+        lines.append("- No se detectaron pantallas.")
+    lines += ["", "## Bottom sheets y modales"]
+    if sheets:
+        lines.append("- " + ", ".join(sheets[:MAX_LIST_ITEMS]))
+    else:
+        lines.append("- No se detectaron sheets.")
+    if nav_graphs:
+        lines += ["", "## Grafo de navegacion", "", "```mermaid", "graph TD;"]
+        root = None
+        for nav in nav_graphs:
+            if nav.lower().startswith("root"):
+                root = nav
+                break
+        if root:
+            for nav in nav_graphs:
+                if nav != root:
+                    lines.append(f"{root} --> {nav};")
+        else:
+            for nav in nav_graphs:
+                lines.append(f"NavGraph --> {nav};")
+        lines.append("```")
+    return "\n".join(lines).rstrip() + "\n"
+def build_readme_doc(
+    project_root: Path,
+    modules: List[str],
+    entry_points: Dict[str, List[str]],
+    common_main_paths: List[str],
+) -> str:
+    lines = [
+        "# MembersClub",
+        "",
+        "## Resumen",
+        "Aplicacion Kotlin Multiplatform (Compose) con Android e iOS.",
+        "",
+        "## Modulos",
+    ]
+    if modules:
+        lines.append("- " + "\n- ".join(modules))
+    else:
+        lines.append("- No se detectaron modulos.")
+    lines += ["", "## Puntos de entrada"]
+    if entry_points.get("android"):
+        lines.append("- Android: " + ", ".join(entry_points["android"]))
+    if entry_points.get("ios"):
+        lines.append("- iOS: " + ", ".join(entry_points["ios"]))
+    if entry_points.get("app"):
+        lines.append("- UI root: " + ", ".join(entry_points["app"]))
+    if not any(entry_points.values()):
+        lines.append("- No se detectaron puntos de entrada.")
+    lines += ["", "## Codigo compartido"]
+    if common_main_paths:
+        lines.append("- " + ", ".join(common_main_paths))
+    else:
+        lines.append("- commonMain no detectado.")
+    lines += ["", "## Documentacion", "- [Overview](docs/overview.md)", "- [Arquitectura](docs/architecture.md)", "- [Navegacion](docs/navigation.md)", "- [Flujos](docs/flows.md)"]
+    lines += ["", "## Build y pruebas", "- `./gradlew build`", "- `./gradlew :composeApp:assembleDebug`", "- `./gradlew :composeApp:syncFramework`", "- `./gradlew :composeApp:allTests`"]
+    return "\n".join(lines).rstrip() + "\n"
 def build_architecture_doc(data: Dict[str, str]) -> str:
     default_template = (
         "# Arquitectura\n\n"
@@ -409,26 +455,20 @@ def build_architecture_doc(data: Dict[str, str]) -> str:
         "{{architecture_diagram}}"
     )
     return fill_template(default_template, data).rstrip() + "\n"
-
-
 def main() -> int:
     project_root = Path.cwd().resolve()
     docs_dir = project_root / "docs"
     docs_dir.mkdir(exist_ok=True)
-
     skill_root = Path(__file__).parent.resolve()
     architecture_source = skill_root / "assets" / "architecture.md"
     agents_source = skill_root / "assets" / "AGENTS.md"
-
     kotlin_files = [Path(path) for path in iter_kotlin_files(str(project_root))]
     structure = collect_structure(str(project_root))
-
     entry_points = find_entry_points(kotlin_files, project_root)
     modules = detect_modules(project_root)
     common_main_paths = find_common_main(project_root, modules)
     layer_paths = find_layer_paths(project_root, common_main_paths)
     viewmodels = collect_named_symbols(kotlin_files, VIEWMODEL_RE)
-
     gradle_files = []
     for name in ["build.gradle.kts", "build.gradle"]:
         root_path = project_root / name
@@ -439,20 +479,16 @@ def main() -> int:
             module_path = project_root / module / name
             if module_path.exists():
                 gradle_files.append(module_path)
-
     deps = []
     for path in gradle_files:
         deps.extend(extract_gradle_dependencies(read_text(path)))
     deps = sorted(set(deps))
     deps_bucket = classify_dependencies(deps)
-
     flows_path = docs_dir / "flows.md"
     flows_exists = flows_path.exists()
     flows_text = read_text(flows_path) if flows_exists else ""
     flows_summary = summarize_flows(flows_text)
-
     routes = collect_compose_routes(kotlin_files)
-
     entry_points_block = []
     if entry_points["android"]:
         entry_points_block.append("- Android: " + ", ".join(entry_points["android"]))
@@ -462,22 +498,18 @@ def main() -> int:
         entry_points_block.append("- App root: " + ", ".join(entry_points["app"]))
     if not entry_points_block:
         entry_points_block.append("- No se detectaron puntos de entrada.")
-
     common_block = "- " + "\n- ".join(common_main_paths) if common_main_paths else "- commonMain no detectado."
-
     layer_lines = []
     for layer, paths in layer_paths.items():
         if paths:
             layer_lines.append("- {}: {}".format(layer, ", ".join(paths)))
     layers_block = "\n".join(layer_lines) if layer_lines else "- Capas no detectadas en commonMain."
-
     components = []
     if viewmodels:
         components.append("- ViewModels: " + ", ".join(viewmodels[:MAX_LIST_ITEMS]))
     if routes:
         components.append("- Rutas composable: " + ", ".join(routes[:MAX_LIST_ITEMS]))
     components_block = "\n".join(components) if components else "- No se detectaron componentes clave."
-
     deps_lines = []
     for key, label in [
         ("di", "DI"),
@@ -497,7 +529,6 @@ def main() -> int:
             if len(deps_bucket[key]) > MAX_LIST_ITEMS:
                 deps_lines.append("  - (mas dependencias omitidas)")
     deps_block = "\n".join(deps_lines) if deps_lines else "- No se detectaron dependencias."
-
     diagram = ""
     if modules:
         diagram = "## Diagrama de modulos\n\n```mermaid\ngraph TD;\n"
@@ -505,7 +536,6 @@ def main() -> int:
             node = module.replace("-", "_")
             diagram += f"A[Repositorio] --> {node}[{module}];\n"
         diagram += "```\n"
-
     architecture_data = {
         "modules": "- " + "\n- ".join(modules) if modules else "- No se detectaron modulos.",
         "entry_points": "\n".join(entry_points_block),
@@ -515,7 +545,6 @@ def main() -> int:
         "dependencies": deps_block,
         "architecture_diagram": diagram,
     }
-
     navigation_doc = build_navigation_doc(
         project_root,
         structure,
@@ -534,7 +563,21 @@ def main() -> int:
         common_main_paths,
         layer_paths,
     )
-
+    flows_doc = build_flows_doc(
+        project_root,
+        structure,
+        entry_points,
+        modules,
+        common_main_paths,
+        layer_paths,
+        kotlin_files,
+    )
+    readme_doc = build_readme_doc(
+        project_root,
+        modules,
+        entry_points,
+        common_main_paths,
+    )
     architecture_template = load_template_with_fallback(
         architecture_source,
         (
@@ -549,7 +592,6 @@ def main() -> int:
         ),
     )
     architecture_doc = fill_template(architecture_template, architecture_data)
-
     agents_template = load_template_with_fallback(
         agents_source,
         (
@@ -565,12 +607,12 @@ def main() -> int:
         ),
     )
     agents_doc = fill_template(agents_template, {"modules": architecture_data["modules"]})
-
     (docs_dir / "architecture.md").write_text(architecture_doc.rstrip() + "\n", encoding="utf-8")
     (docs_dir / "navigation.md").write_text(navigation_doc, encoding="utf-8")
     (docs_dir / "overview.md").write_text(overview_doc, encoding="utf-8")
+    (docs_dir / "flows.md").write_text(flows_doc, encoding="utf-8")
+    (project_root / "README.md").write_text(readme_doc.rstrip() + "\n", encoding="utf-8")
     (project_root / "AGENTS.md").write_text(agents_doc.rstrip() + "\n", encoding="utf-8")
-
     print("Documentation generation completed successfully.")
     print(f"Project (cwd): {project_root}")
     print("Generated / overwritten:")
@@ -578,9 +620,8 @@ def main() -> int:
     print(" - docs/architecture.md")
     print(" - docs/navigation.md")
     print(" - docs/overview.md")
-
+    print(" - docs/flows.md")
+    print(" - README.md")
     return 0
-
-
 if __name__ == "__main__":
     raise SystemExit(main())

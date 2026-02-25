@@ -18,6 +18,7 @@ NAV_GRAPH_RE = re.compile(r"\b(\w+NavGraph)\b")
 COMPOSABLE_SCREEN_RE = re.compile(r"@Composable\s+fun\s+(\w+Screen)\s*\(")
 SEALED_UISTATE_CLASS_RE = re.compile(r"\bsealed\s+class\s+(\w+UiState)\b")
 SEALED_UISTATE_INTERFACE_RE = re.compile(r"\bsealed\s+interface\s+(\w+UiState)\b")
+DATA_UISTATE_RE = re.compile(r"\bdata\s+class\s+(\w*UiState)\b")
 BOTTOM_SHEET_RE = re.compile(r"\b(\w+BottomSheet)\b")
 MODAL_BOTTOM_SHEET_RE = re.compile(r"\bModalBottomSheet\b")
 
@@ -45,7 +46,10 @@ def find_ui_states(text: str) -> Set[str]:
         states.add(match.group(1))
     for match in SEALED_UISTATE_INTERFACE_RE.finditer(text):
         states.add(match.group(1))
+    for match in DATA_UISTATE_RE.finditer(text):
+        states.add(match.group(1))
     return states
+
 
 
 def find_ui_state_refs(text: str, ui_states: Set[str]) -> Set[str]:
