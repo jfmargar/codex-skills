@@ -6,55 +6,82 @@ description: Analyze Android repositories and always generate architecture and n
 # Android Docs Generator
 
 Use this skill to generate or refresh project documentation for Android repositories.
-The agent must analyze the repo directly (read key files) and enrich the docs with
-real findings. The script is optional and should only be used as a scaffold; final
-docs must reflect the agent's analysis, not template defaults.
+The agent must analyze the repo directly and write docs from real findings.
 
-## What this skill does
+## Default mode (required)
 
-- Analyze the repo to identify modules, entry points, navigation, layers, and key wiring.
-- Always generate/update:
-  - `README.md` (summary + index)
-  - `docs/architecture.md` (architecture)
-  - `docs/navigation.md` (navigation)
-- Ensures `docs/` exists at the repository root.
-- Uses Mermaid diagrams compatible with GitLab (simple `graph`/`sequenceDiagram`, semicolons, no special chars).
+This skill is **agent-driven by default**. Do not depend on scripts for core behavior.
 
-## Required analysis (agent-driven)
+- The agent must inspect the repository and produce docs directly.
+- The agent must prioritize real code evidence over templates.
+- The agent must document navigation flows, routes, and screens from actual implementation.
+
+## Required outputs
+
+Always generate/update:
+- `README.md` (summary + docs index)
+- `docs/architecture.md`
+- `docs/navigation.md`
+
+Ensure `docs/` exists in repository root.
+
+## Required repository analysis
 
 Read and extract facts from:
-- `app/src/main/AndroidManifest.xml` (package, launcher, declared activities)
-- `app/build.gradle(.kts)` and root Gradle files (deps and modules)
-- `app/src/main/res/navigation/*.xml` when present (NavGraph routes)
-- Navigation/router classes (e.g., `Router.kt`, `Navigate.kt`, `NavController` usage)
-- Package layout (`ui/`, `domain/`, `data/`, `injection/`) and key entry points
+- `app/src/main/AndroidManifest.xml` (package, launcher, declared activities, `Application`)
+- `app/build.gradle(.kts)` + root Gradle files (`settings.gradle(.kts)`, `gradle/libs.versions.toml`)
+- `app/src/main/res/navigation/*.xml` when present
+- Compose navigation code (`NavHost`, `navigation<...>`, `composable<...>`, `navigate(...)`)
+- Router/screen models (`AppScreen`, `Screen`, `Router`, etc.)
+- Project layers/packages (`ui/`, `domain/`, `data/`, `injection/`, `di/`, and project-specific variants)
+- DI wiring (`Koin`/`Hilt`/etc.), repositories, use cases, and key entry points
 
-Summarize findings in the docs using concrete file references (paths) and real names.
-Avoid generic statements that are not backed by the repo content.
+## Execution workflow (agent)
 
-## Quick start
+1. Inspect manifest + entry points.
+2. Inspect Gradle + version catalog to identify stack.
+3. Inspect navigation implementation (Compose and/or XML nav graphs).
+4. Inspect package/layer structure and key wiring (DI, repositories, use cases).
+5. Write/update `README.md`, `docs/architecture.md`, `docs/navigation.md` with concrete repo evidence.
+6. Validate docs against quality gate before finishing.
 
-From the repository root:
+## Documentation expectations
 
-```
+- Use concrete names and real paths from repo.
+- Avoid generic claims not backed by code.
+- Include Mermaid diagrams compatible with GitLab:
+  - `graph TD/LR` and `sequenceDiagram`
+  - keep labels simple; avoid special characters that break parsing.
+- Navigation doc must include:
+  - route inventory
+  - major functional flows
+  - back-stack/pop-up behavior if present
+  - shared/reused screens between flows when applicable
+
+## Quality gate before finishing
+
+Before returning, verify docs are not template-like:
+- No placeholders (`TODO`, `TBD`, `Unknown`, etc.) unless truly unknown and explicitly stated.
+- Navigation section must mention the actual navigation mechanism used by the app.
+- Architecture section must mention real stack elements detected (DI, storage, networking, analytics/crash).
+- README must link to generated docs.
+
+## Optional helper script
+
+A helper script exists and can be used only as a scaffold, never as final source of truth:
+
+```bash
 python3 /Users/jfmargar/.codex/skills/android-docs/scripts/generate_docs.py
 ```
 
-This overwrites existing docs with updated content.
-
-## Behavior and expectations
-
-- If docs already exist, the script re-analyzes the project and overwrites them.
-- Diagram labels are sanitized to avoid GitLab Mermaid parse errors.
-- If some elements are missing (e.g., no `dabase` module), the script will still
-  generate the files with best-effort data.
+If used, the agent must still review and correct output before final delivery.
+Do not use this script when user explicitly asks for agent-only execution.
 
 ## Templates
 
-Templates live in `assets/` and are optional examples:
+Templates in `assets/` are optional layout references:
 - `assets/README.md.tpl`
 - `assets/architecture.md.tpl`
 - `assets/navigation.md.tpl`
 
-Edit templates if you want to adjust sections or layout. The agent should use them
-as layout hints, not as literal content.
+Do not copy templates literally if repo findings differ.

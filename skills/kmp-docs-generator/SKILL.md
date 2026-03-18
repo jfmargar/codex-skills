@@ -5,13 +5,22 @@ description: Analyze Kotlin Multiplatform Compose repositories and generate or u
 
 # kmp-docs-generator
 
-Agent-first skill to generate project documentation from direct repository inspection.
+Use this skill to generate or refresh documentation for Kotlin Multiplatform Compose repositories.
+The agent must analyze the repo directly and produce docs from verified findings.
+
+## Default mode (required)
+
+This skill is **agent-driven by default**.
+
+- The agent must inspect code and configuration directly.
+- The agent must prioritize repository evidence over assumptions.
+- Documentation must reflect the current implementation, not ideal/target architecture.
 
 ## Scope
 
 This skill always targets the current working directory and manages only:
 
-- `README.md` (project summary + documentation index)
+- `README.md` (project summary + docs index)
 - `docs/overview.md`
 - `docs/architecture.md`
 - `docs/navigation.md`
@@ -21,32 +30,65 @@ It does not generate or modify `AGENTS.md`.
 
 ## Create/Update behavior
 
-- If `README.md` or `docs/*` files do not exist, create them.
-- If they already exist, update them with full-file rewrites to keep consistency.
+- If outputs do not exist, create them.
+- If outputs exist, rewrite fully to maintain consistency between files.
 
-## Required workflow (always)
+## Required repository analysis
 
-1. Inspect repository structure before writing anything.
-2. Detect modules from `settings.gradle(.kts)` and root folders.
-3. Detect entry points (Android, iOS, `App()`).
-4. Inspect navigation from real code paths, especially:
-   - `AppDestination`
-   - `Navigation.kt`
-   - real `navigate(...)` calls and registered routes
-5. Identify key composable screens and architecture layers (`domain`, `data`, `ui`, plus legacy `dabase`).
-6. Cross-check consistency between `README.md` and all files in `docs/`.
-7. Write/update outputs in Spanish by default.
+Read and extract facts from:
+- Root config: `settings.gradle(.kts)`, `build.gradle(.kts)`, `gradle/libs.versions.toml`
+- KMP module setup (`android`, `ios`, `wasm/js`, shared/common modules when present)
+- Entry points (Android `Application`/`Activity`, iOS app entry, shared `App()` composable)
+- Navigation implementation:
+  - destination models (`AppDestination`, `Screen`, sealed routes, etc.)
+  - route registration (`NavHost`, `navigation`, `composable`)
+  - transition calls (`navigate(...)`, pop/back-stack rules)
+- Project structure and layers (`ui`, `domain`, `data`, plus legacy/shared variants)
+- DI and service wiring (Koin/Hilt/manual DI)
 
-## Output structure
+## Execution workflow (agent)
 
-- `README.md`: concise project summary and index linking to all docs files.
-- `docs/overview.md`: high-level project view with valid cross-references.
-- `docs/architecture.md`: modules, layers, and relevant dependencies.
-- `docs/navigation.md`: destinations, transitions, and navigation notes from code.
-- `docs/flows.md`: operational happy paths and Mermaid flow aligned with navigation.
+1. Inspect repository structure and module graph.
+2. Identify platform entry points and shared app entry.
+3. Inspect navigation code and route definitions.
+4. Map screens/features to flows and transitions.
+5. Inspect architecture and dependencies per layer.
+6. Write/update `README.md` + all files under `docs/`.
+7. Validate consistency with quality gate before finishing.
 
-## Quality rules
+## Output expectations
 
-- Do not invent facts: if something is not confirmed in code, do not document it as implemented.
-- Keep `docs/navigation.md` and `docs/flows.md` aligned (same navigation reality; same Mermaid graph when applicable).
-- Prefer precision over boilerplate text.
+- `README.md`: concise summary and links to `docs/*`.
+- `docs/overview.md`: functional overview and module responsibilities.
+- `docs/architecture.md`: layers, DI, data flow, relevant dependencies.
+- `docs/navigation.md`: route inventory, transitions, back-stack/pop rules.
+- `docs/flows.md`: main operational flows aligned with navigation.
+
+Write in Spanish by default unless user asks otherwise.
+
+## Diagrams
+
+Use Mermaid compatible with GitLab:
+- `graph TD/LR`
+- `sequenceDiagram`
+
+Keep labels simple; avoid special characters that can break parser compatibility.
+
+## Quality gate (must pass)
+
+Before returning, verify:
+- No invented facts.
+- No placeholders (`TODO`, `TBD`, `Unknown`) unless explicitly justified.
+- `docs/navigation.md` and `docs/flows.md` describe the same real navigation.
+- `README.md` links correctly to all generated docs files.
+- Cross-file terminology is consistent (same route/screen names everywhere).
+
+## Optional helpers
+
+If helper scripts/templates exist in this skill folder, they are scaffolding only.
+They must never be treated as source of truth; final output must be manually validated against repository code.
+
+## Non-goals
+
+- Do not modify runtime code just to “fit” documentation.
+- Do not preserve stale docs when repository behavior has changed.
