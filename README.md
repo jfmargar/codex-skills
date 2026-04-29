@@ -1,6 +1,7 @@
 # Codex Skills
 
 Este repositorio agrupa varias skills de Codex orientadas a documentar proyectos Android y Kotlin Multiplatform.
+Además, versiona una copia del `AGENTS.md` global de Codex para mantener trazabilidad de las reglas operativas.
 
 Actualmente contiene tres skills:
 
@@ -12,10 +13,16 @@ Actualmente contiene tres skills:
 
 ```text
 skills/
+├── AGENTS.md
 ├── android-docs/
 ├── kmp-docs-generator/
 └── update-doc-skill/
 ```
+
+## Reglas operativas versionadas
+
+- El archivo raíz `AGENTS.md` refleja la configuración global de Codex que se está versionando en este repositorio.
+- Sirve como referencia histórica y de colaboración para mantener consistencia entre sesiones y cambios de workflow.
 
 ## Resumen rápido
 
