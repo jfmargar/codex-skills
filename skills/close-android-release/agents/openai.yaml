@@ -1,0 +1,4 @@
+interface:
+  display_name: "Close Android Release"
+  short_description: "Close GitFlow Android releases."
+  default_prompt: "Use $close-android-release to finish a published Android release with merges, tag, pushes, and release-branch cleanup."

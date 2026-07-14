@@ -1,0 +1,4 @@
+interface:
+  display_name: "App Store Screenshot Pipeline"
+  short_description: "Create App Store screenshot sets"
+  default_prompt: "Prepare App Store screenshots for this iOS app: capture the main functionality on iPhone and iPad simulators, then generate marketing-ready images."

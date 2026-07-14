@@ -1,0 +1,4 @@
+interface:
+  display_name: "App Store Screenshots"
+  short_description: "Capture and package App Store screenshots from real app screens."
+  default_prompt: "Use this skill to identify the strongest App Store screenshots from a project, capture them from running simulators when needed, and generate store-ready marketing images with short commercial copy in exact App Store Connect sizes."

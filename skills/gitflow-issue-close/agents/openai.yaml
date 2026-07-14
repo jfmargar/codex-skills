@@ -1,0 +1,4 @@
+interface:
+  display_name: "GitFlow Issue Close"
+  short_description: "Close issues with full GitFlow."
+  default_prompt: "Complete an issue using the required GitFlow sequence, then close it only after validation, commit, push, and merge."

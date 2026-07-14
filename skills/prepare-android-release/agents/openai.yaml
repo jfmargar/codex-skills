@@ -1,0 +1,4 @@
+interface:
+  display_name: "Prepare Android Release"
+  short_description: "Prepare GitFlow Android releases."
+  default_prompt: "Use $prepare-android-release to create a release branch, bump the Android version, update the changelog, and prepare Firebase App Distribution notes."
