@@ -9,7 +9,7 @@ Actualmente contiene estas skills:
 - `android-simulator-autotest`
 - `app-store-screenshot-pipeline`
 - `app-store-screenshots`
-- `close-android-release`
+- `close-gitflow-release`
 - `gitflow-issue-close`
 - `imagegen`
 - `kmp-docs-generator`
@@ -24,7 +24,7 @@ skills/
 ├── android-simulator-autotest/
 ├── app-store-screenshot-pipeline/
 ├── app-store-screenshots/
-├── close-android-release/
+├── close-gitflow-release/
 ├── gitflow-issue-close/
 ├── imagegen/
 ├── kmp-docs-generator/
@@ -45,7 +45,7 @@ skills/
 | `android-simulator-autotest` | Validacion automatizada | Apps Android/KMP | Ejecuta smoke tests, chequeos de navegacion y auditoria basica sobre simulador |
 | `app-store-screenshot-pipeline` | Pipeline guiado | Apps iOS | Captura y prepara screenshots comerciales para App Store |
 | `app-store-screenshots` | Captura + composicion | Apps iOS | Genera lotes de screenshots listas para App Store Connect |
-| `close-android-release` | Flujo de release | Apps Android | Cierra una release Android siguiendo el checklist definido por la skill |
+| `close-gitflow-release` | Flujo de release | Repositorios con GitFlow | Cierra una release GitFlow siguiendo el checklist definido por la skill |
 | `gitflow-issue-close` | Flujo Git/GitHub | Repositorios con GitFlow | Implementa y cierra issues siguiendo rama, validacion y merge |
 | `imagegen` | Utilidad de assets | Generacion/edicion de imagen | Usa Image API/CLI para crear o editar imagenes desde Codex |
 | `kmp-docs-generator` | Agent-driven | Proyectos Kotlin Multiplatform Compose | Genera o refresca `README.md` y `docs/overview.md`, `docs/architecture.md`, `docs/navigation.md`, `docs/flows.md` |
@@ -115,11 +115,11 @@ Que hace:
 - genera composiciones promocionales
 - adapta las imagenes a formatos y dimensiones de App Store
 
-### `close-android-release`
+### `close-gitflow-release`
 
-Ubicacion: [skills/close-android-release](./skills/close-android-release)
+Ubicacion: [skills/close-gitflow-release](./skills/close-gitflow-release)
 
-Skill de workflow para cerrar una release Android siguiendo un proceso guiado.
+Skill de workflow para cerrar una release GitFlow siguiendo un proceso guiado.
 
 ### `gitflow-issue-close`
 
@@ -205,7 +205,7 @@ Notas importantes:
 - Usa `update_project_docs` cuando no quieres redactar aun toda la documentacion, sino preparar estructura y prompts para una generacion posterior.
 - Usa `android-simulator-autotest` cuando el objetivo principal sea validar la app en simulador.
 - Usa `app-store-screenshot-pipeline` o `app-store-screenshots` cuando necesites assets comerciales para App Store.
-- Usa `prepare-android-release` y `close-android-release` para pasos guiados del ciclo de release Android.
+- Usa `prepare-android-release` y `close-gitflow-release` para pasos guiados del ciclo de release con GitFlow.
 - Usa `imagegen` para generacion o edicion de imagenes dentro de Codex.
 - Usa `gitflow-issue-close` cuando debas cerrar trabajo siguiendo una rama y merge controlados.
 

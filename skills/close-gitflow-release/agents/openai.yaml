@@ -1,0 +1,4 @@
+interface:
+  display_name: "Close GitFlow Release"
+  short_description: "Close GitFlow releases."
+  default_prompt: "Use $close-gitflow-release to finish a published GitFlow release with merges, tag, pushes, and release-branch cleanup."

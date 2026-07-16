@@ -1,9 +1,9 @@
 ---
-name: close-android-release
-description: Close an Android release in a GitFlow-style repository. Use when the user asks to finish, publish, merge, complete, or close a release that already exists on a `release/*` branch and the workflow requires merging into `main`, tagging the release, integrating it back into `develop`, pushing all required refs, and deleting the release branch.
+name: close-gitflow-release
+description: Close a GitFlow release in a repository that uses `main`, `develop`, and `release/*` branches. Use when the user asks to finish, publish, merge, complete, or close a release that already exists on a `release/*` branch and the workflow requires merging into `main`, tagging the release, integrating it back into `develop`, pushing all required refs, and deleting the release branch.
 ---
 
-# Close Android Release
+# Close GitFlow Release
 
 Follow this workflow when the release has already been prepared and must be completed end to end.
 
