@@ -13,6 +13,7 @@ Actualmente contiene estas skills:
 - `gitflow-issue-close`
 - `imagegen`
 - `kmp-docs-generator`
+- `next-issue`
 - `prepare-android-release`
 - `update_project_docs` (carpeta `update-doc-skill`)
 
@@ -28,6 +29,7 @@ skills/
 ├── gitflow-issue-close/
 ├── imagegen/
 ├── kmp-docs-generator/
+├── next-issue/
 ├── prepare-android-release/
 └── update-doc-skill/
 ```
@@ -49,6 +51,7 @@ skills/
 | `gitflow-issue-close` | Flujo Git/GitHub | Repositorios con GitFlow | Implementa y cierra issues siguiendo rama, validacion y merge |
 | `imagegen` | Utilidad de assets | Generacion/edicion de imagen | Usa Image API/CLI para crear o editar imagenes desde Codex |
 | `kmp-docs-generator` | Agent-driven | Proyectos Kotlin Multiplatform Compose | Genera o refresca `README.md` y `docs/overview.md`, `docs/architecture.md`, `docs/navigation.md`, `docs/flows.md` |
+| `next-issue` | Flujo GitLab | Repositorios con GitLab | Toma el siguiente issue listo, lo asigna y prepara la rama de trabajo |
 | `prepare-android-release` | Flujo de release | Apps Android | Prepara una release Android antes del cierre y publicacion |
 | `update_project_docs` | Script + preparacion | Proyectos KMP/Compose | Prepara `docs/structure.json` y prompts para que Codex genere documentacion despues |
 
@@ -167,6 +170,12 @@ Notas importantes:
 - Está pensada para reconstruir la documentación completa de un proyecto KMP Compose a partir de la implementación real.
 - No modifica `AGENTS.md`.
 
+### `next-issue`
+
+Ubicacion: [skills/next-issue](./skills/next-issue)
+
+Skill de workflow para GitLab que toma el siguiente issue listo para trabajar, lo asigna al usuario autenticado y crea o cambia a la rama adecuada antes de implementar.
+
 ### `prepare-android-release`
 
 Ubicacion: [skills/prepare-android-release](./skills/prepare-android-release)
@@ -205,6 +214,7 @@ Notas importantes:
 - Usa `update_project_docs` cuando no quieres redactar aun toda la documentacion, sino preparar estructura y prompts para una generacion posterior.
 - Usa `android-simulator-autotest` cuando el objetivo principal sea validar la app en simulador.
 - Usa `app-store-screenshot-pipeline` o `app-store-screenshots` cuando necesites assets comerciales para App Store.
+- Usa `next-issue` cuando quieras arrancar trabajo sobre el siguiente issue listo en un proyecto con GitLab.
 - Usa `prepare-android-release` y `close-gitflow-release` para pasos guiados del ciclo de release con GitFlow.
 - Usa `imagegen` para generacion o edicion de imagenes dentro de Codex.
 - Usa `gitflow-issue-close` cuando debas cerrar trabajo siguiendo una rama y merge controlados.

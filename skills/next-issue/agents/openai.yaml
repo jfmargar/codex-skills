@@ -1,0 +1,4 @@
+interface:
+  display_name: "nextIssue"
+  short_description: "Start the next GitLab issue using the project workflow"
+  default_prompt: "Use $next-issue to select and start the next GitLab issue for this project."
